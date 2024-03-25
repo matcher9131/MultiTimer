@@ -15,7 +15,7 @@ namespace MultiTimer.Converters
         {
             if (value is TimeSpan time)
             {
-                return $"{time.TotalHours:D}:{time.Minutes:D2}:{time.Seconds:D2}";
+                return $"{(int)time.TotalHours:D}:{time.Minutes:D2}:{time.Seconds:D2}";
             }
             else
             {

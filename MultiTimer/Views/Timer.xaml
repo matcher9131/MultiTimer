@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:vm="clr-namespace:MultiTimer.ViewModels" 
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:MultiTimer.Controls"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=vm:TimerViewModel}"
     prism:ViewModelLocator.AutoWireViewModel="True"
@@ -16,13 +16,38 @@
             <ColumnDefinition Width="200" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <RowDefinition />
         </Grid.RowDefinitions>
         <TextBlock
-            Grid.Column="1"
-            Grid.Row="1"
-            Text="{Binding Remain, Converter={StaticResource TimeSpanConverter}}"
+            Grid.Column="0"
+            Grid.Row="0"
+            Text="{Binding Remain.Value, Converter={StaticResource TimeSpanConverter}}"
             HorizontalAlignment="Right"
         />
+        <UniformGrid Grid.Row="0" Grid.Column="1" Columns="2">
+            <controls:IntegerUpDown
+                Width="75"
+                Height="30"
+                MinValue="1"
+                CurrentValue="{Binding TimerLength.Value}"
+            />
+            <StackPanel />
+            <Button
+                Grid.Row="1"
+                Grid.Column="0"
+                Width="75"
+                Height="30"
+                Content="{Binding PrimaryButtonText.Value}"
+                Command="{Binding ClickPrimaryButtonCommand}"
+            />
+            <Button
+                Grid.Row="1"
+                Grid.Column="1"
+                Width="75"
+                Height="30"
+                Content="{Binding SecondaryButtonText.Value}"
+                Command="{Binding ClickSecondaryButtonCommand}"
+            />
+        </UniformGrid>
     </Grid>
 </UserControl>

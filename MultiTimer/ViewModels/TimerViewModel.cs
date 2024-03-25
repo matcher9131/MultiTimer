@@ -34,7 +34,7 @@ namespace MultiTimer.ViewModels
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
             this.currentTimerLength = new ReactivePropertySlim<TimeSpan>(TimeSpan.Zero).AddTo(this.disposables);
 
-            this.TimerLength = new ReactivePropertySlim<int>(0).AddTo(this.disposables);
+            this.TimerLength = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
             this.Remain = Observable.Interval(TimeSpan.FromMilliseconds(100))
                 .Select(_ => {
                     if (this.state.Value == TimerState.Idle) return TimeSpan.Zero;
@@ -68,11 +68,18 @@ namespace MultiTimer.ViewModels
             switch (this.state.Value)
             {
                 case TimerState.Idle:
-                case TimerState.Running:
                 case TimerState.Pausing:
                     this.OnTimerStart(); break;
-                case TimerState.Finishing:
-                    this.OnTimerStop(); break;
+                case TimerState.Running:
+                    if (this.stopwatch.Elapsed > this.currentTimerLength.Value)
+                    {
+                        this.OnTimerStop();
+                    }
+                    else
+                    {
+                        this.OnTimerStart();
+                    }
+                    break;
             }
         }
         public void ClickSecondaryButton()
