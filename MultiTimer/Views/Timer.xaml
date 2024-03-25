@@ -23,6 +23,8 @@
             Grid.Row="0"
             Text="{Binding Remain.Value, Converter={StaticResource TimeSpanConverter}}"
             HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            FontSize="48"
         />
         <UniformGrid Grid.Row="0" Grid.Column="1" Columns="2">
             <controls:IntegerUpDown
@@ -30,6 +32,7 @@
                 Height="30"
                 MinValue="1"
                 CurrentValue="{Binding TimerLength.Value}"
+                FontSize="16"
             />
             <StackPanel />
             <Button
@@ -37,6 +40,7 @@
                 Grid.Column="0"
                 Width="75"
                 Height="30"
+                FontSize="16"
                 Content="{Binding PrimaryButtonText.Value}"
                 Command="{Binding ClickPrimaryButtonCommand}"
             />
@@ -45,6 +49,7 @@
                 Grid.Column="1"
                 Width="75"
                 Height="30"
+                FontSize="16"
                 Content="{Binding SecondaryButtonText.Value}"
                 Command="{Binding ClickSecondaryButtonCommand}"
             />
