@@ -31,20 +31,17 @@ namespace MultiTimer.Controls
         public int CurrentValue
         {
             get { return (int)GetValue(CurrentValueProperty); }
-            set { SetValue(CurrentValueProperty, WithinRange(value, this.MinValue, this.MaxValue)); }
+            set { SetValue(CurrentValueProperty, value); }
         }
 
         private static void OnCurrentValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(MinValueProperty);
-            d.CoerceValue(MaxValueProperty);
-        }
-
-        private static object CoerceCurrentValue(DependencyObject d, object value)
-        {
             var integerUpDown = (IntegerUpDown)d;
-            int currentValue = (int)value;
-            return WithinRange(currentValue, integerUpDown.MinValue, integerUpDown.MaxValue);
+            int forcedNewValue = WithinRange(integerUpDown.CurrentValue, integerUpDown.MinValue, integerUpDown.MaxValue);
+            if (forcedNewValue != integerUpDown.CurrentValue)
+            {
+                integerUpDown.CurrentValue = forcedNewValue;
+            }
         }
 
         public static readonly DependencyProperty CurrentValueProperty = DependencyProperty.Register(
@@ -54,8 +51,7 @@ namespace MultiTimer.Controls
             typeMetadata: new FrameworkPropertyMetadata(
                 defaultValue: 0,
                 flags: FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                propertyChangedCallback: new PropertyChangedCallback(OnCurrentValueChanged),
-                coerceValueCallback: new CoerceValueCallback(CoerceCurrentValue)
+                propertyChangedCallback: new PropertyChangedCallback(OnCurrentValueChanged)
             )
         );
         #endregion
@@ -90,15 +86,16 @@ namespace MultiTimer.Controls
 
         private static void OnMinValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(MinValueProperty);
-            d.CoerceValue(CurrentValueProperty);
-        }
-
-        private static object CoerceMinValue(DependencyObject d, object value)
-        {
             var integerUpDown = (IntegerUpDown)d;
-            int minValue = (int)value;
-            return WithinRange(minValue, int.MinValue, integerUpDown.MaxValue);
+            // MaxValueを超える値をセットしたときはMaxValueと同じ値をセットしたことにする
+            if (integerUpDown.MinValue > integerUpDown.MaxValue)
+            {
+                integerUpDown.MinValue = integerUpDown.MaxValue;
+            }
+            if (integerUpDown.CurrentValue < integerUpDown.MinValue)
+            {
+                integerUpDown.CurrentValue = integerUpDown.MinValue;
+            }
         }
 
         public static readonly DependencyProperty MinValueProperty = DependencyProperty.Register(
@@ -107,8 +104,7 @@ namespace MultiTimer.Controls
             ownerType: typeof(IntegerUpDown), 
             typeMetadata: new PropertyMetadata(
                 defaultValue: int.MinValue,
-                propertyChangedCallback: new PropertyChangedCallback(OnMinValueChanged),
-                coerceValueCallback: new CoerceValueCallback(CoerceMinValue)
+                propertyChangedCallback: new PropertyChangedCallback(OnMinValueChanged)
             )
         );
         #endregion
@@ -122,15 +118,16 @@ namespace MultiTimer.Controls
 
         private static void OnMaxValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            d.CoerceValue(MaxValueProperty);
-            d.CoerceValue(CurrentValueProperty);
-        }
-
-        private static object CoerceMaxValue(DependencyObject d, object value)
-        {
             var integerUpDown = (IntegerUpDown)d;
-            int maxValue = (int)value;
-            return WithinRange(maxValue, integerUpDown.MinValue, int.MaxValue);
+            // MinValue未満の値をセットしたときはMinValueと同じ値をセットしたことにする
+            if (integerUpDown.MaxValue < integerUpDown.MinValue)
+            {
+                integerUpDown.MaxValue = integerUpDown.MinValue;
+            }
+            if (integerUpDown.CurrentValue > integerUpDown.MaxValue)
+            {
+                integerUpDown.CurrentValue = integerUpDown.MaxValue;
+            }
         }
 
         public static readonly DependencyProperty MaxValueProperty = DependencyProperty.Register(
@@ -139,8 +136,7 @@ namespace MultiTimer.Controls
             ownerType: typeof(IntegerUpDown),
             typeMetadata: new PropertyMetadata(
                 defaultValue: int.MaxValue,
-                propertyChangedCallback: new PropertyChangedCallback(OnMaxValueChanged),
-                coerceValueCallback: new CoerceValueCallback(CoerceMaxValue)
+                propertyChangedCallback: new PropertyChangedCallback(OnMaxValueChanged)
             )
         );
         #endregion
