@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Media;
 using System.Printing;
 using System.Reactive.Linq;
 
@@ -18,6 +19,7 @@ namespace MultiTimer.ViewModels
 
         private readonly ReactivePropertySlim<TimerState> state;
         private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
+        private readonly IObservable<long> finishObservable;
 
         public ReactivePropertySlim<int> TimerLengthMinutes { get; }
 
@@ -47,11 +49,6 @@ namespace MultiTimer.ViewModels
                 .ToReactiveProperty(mode: ReactivePropertyMode.DistinctUntilChanged)
                 .AddTo(this.disposables);
 
-            //this.PrimaryButtonText = this.state.Select(s =>
-            //{
-            //    if (s == TimerState.Idle) return "Start";
-            //    return this.stopwatch.ElapsedMilliseconds > this.currentTimerLengthMilliseconds.Value ? "Stop" : "Restart";
-            //}).ToReadOnlyReactivePropertySlim<string>().AddTo(this.disposables);
             this.PrimaryButtonText = this.state.CombineLatest(this.RemainMilliseconds, Tuple.Create).Select(tuple =>
             {
                 var (s, remain) = tuple;
@@ -70,6 +67,9 @@ namespace MultiTimer.ViewModels
                 .WithSubscribe(this.ClickSecondaryButton)
                 .AddTo(this.disposables);
 
+            // TEMPORAL
+            this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
+            this.finishObservable.Subscribe(_ => this.OnTimerStopping()).AddTo(this.disposables);
         }
 
         public void ClickPrimaryButton()
@@ -80,11 +80,7 @@ namespace MultiTimer.ViewModels
                 case TimerState.Pausing:
                     this.OnTimerStarting(); break;
                 case TimerState.Running:
-                    if (this.stopwatch.ElapsedMilliseconds > this.currentTimerLengthMilliseconds.Value)
-                    {
-                        this.OnTimerStopped();
-                    }
-                    else
+                    if (this.RemainMilliseconds.Value > 0)
                     {
                         this.OnTimerStarting();
                     }
@@ -109,11 +105,11 @@ namespace MultiTimer.ViewModels
             this.stopwatch.Restart();
         }
 
-        private void OnTimerStopped()
+        private void OnTimerStopping()
         {
             this.state.Value = TimerState.Idle;
             this.stopwatch.Reset();
-            // alertをstop
+            SystemSounds.Exclamation.Play();
         }
 
         private void OnTimerPausing()
