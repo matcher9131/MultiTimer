@@ -7,7 +7,7 @@
     xmlns:conv="clr-namespace:MultiTimer.Converters"
 >
     <Application.Resources>
-        <conv:TimeSpanConverter x:Key="TimeSpanConverter" />
+        <conv:MillisecondsConverter x:Key="MillisecondsConverter" />
         <SolidColorBrush x:Key="ExclamationBrush" Color="Yellow" />
     </Application.Resources>
 </prism:PrismApplication>

@@ -21,7 +21,7 @@
         <TextBlock
             Grid.Column="0"
             Grid.Row="0"
-            Text="{Binding Remain.Value, Converter={StaticResource TimeSpanConverter}}"
+            Text="{Binding RemainMilliseconds.Value, Converter={StaticResource MillisecondsConverter}}"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
             FontSize="48"
@@ -31,13 +31,18 @@
                 Width="75"
                 Height="30"
                 MinValue="1"
-                CurrentValue="{Binding TimerLength.Value}"
+                CurrentValue="{Binding TimerLengthMinutes.Value}"
                 FontSize="16"
             />
-            <StackPanel />
+            <CheckBox
+                Margin="12.5,0"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                FontSize="16"
+                Content="Alert"
+                IsChecked="{Binding NeedsAlert.Value}"
+            />
             <Button
-                Grid.Row="1"
-                Grid.Column="0"
                 Width="75"
                 Height="30"
                 FontSize="16"
@@ -45,8 +50,6 @@
                 Command="{Binding ClickPrimaryButtonCommand}"
             />
             <Button
-                Grid.Row="1"
-                Grid.Column="1"
                 Width="75"
                 Height="30"
                 FontSize="16"

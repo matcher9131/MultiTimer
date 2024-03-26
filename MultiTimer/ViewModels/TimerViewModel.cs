@@ -17,11 +17,13 @@ namespace MultiTimer.ViewModels
         private readonly Stopwatch stopwatch = new();
 
         private readonly ReactivePropertySlim<TimerState> state;
-        private readonly ReactivePropertySlim<TimeSpan> currentTimerLength;
+        private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
 
-        public ReactivePropertySlim<int> TimerLength { get; }
+        public ReactivePropertySlim<int> TimerLengthMinutes { get; }
 
-        public ReactiveProperty<TimeSpan> Remain { get; }
+        public ReactivePropertySlim<bool> NeedsAlert { get; }
+
+        public ReactiveProperty<long> RemainMilliseconds { get; }
 
         public ReadOnlyReactivePropertySlim<string> PrimaryButtonText { get; }
         public ReadOnlyReactivePropertySlim<string> SecondaryButtonText { get; }
@@ -32,22 +34,29 @@ namespace MultiTimer.ViewModels
         public TimerViewModel()
         {
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
-            this.currentTimerLength = new ReactivePropertySlim<TimeSpan>(TimeSpan.Zero).AddTo(this.disposables);
+            this.currentTimerLengthMilliseconds = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
 
-            this.TimerLength = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
-            this.Remain = Observable.Interval(TimeSpan.FromMilliseconds(100))
+            this.TimerLengthMinutes = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
+            this.NeedsAlert = new ReactivePropertySlim<bool>(false).AddTo(this.disposables);
+            this.RemainMilliseconds = Observable.Interval(TimeSpan.FromMilliseconds(100))
                 .Select(_ => {
-                    if (this.state.Value == TimerState.Idle) return TimeSpan.Zero;
-                    var remain = this.currentTimerLength.Value - this.stopwatch.Elapsed;
-                    return remain >= TimeSpan.Zero ? remain : TimeSpan.Zero;
+                    if (this.state.Value == TimerState.Idle) return 1000L * 60L * this.TimerLengthMinutes.Value;
+                    var remain = this.currentTimerLengthMilliseconds.Value - this.stopwatch.ElapsedMilliseconds;
+                    return remain < 0L ? 0L : remain;
                 })
-                .ToReactiveProperty(mode: ReactivePropertyMode.DistinctUntilChanged) // 挙動が変ならmodeをはずすこと
+                .ToReactiveProperty(mode: ReactivePropertyMode.DistinctUntilChanged)
                 .AddTo(this.disposables);
 
-            this.PrimaryButtonText = this.state.Select(s =>
+            //this.PrimaryButtonText = this.state.Select(s =>
+            //{
+            //    if (s == TimerState.Idle) return "Start";
+            //    return this.stopwatch.ElapsedMilliseconds > this.currentTimerLengthMilliseconds.Value ? "Stop" : "Restart";
+            //}).ToReadOnlyReactivePropertySlim<string>().AddTo(this.disposables);
+            this.PrimaryButtonText = this.state.CombineLatest(this.RemainMilliseconds, Tuple.Create).Select(tuple =>
             {
+                var (s, remain) = tuple;
                 if (s == TimerState.Idle) return "Start";
-                return this.stopwatch.Elapsed > this.currentTimerLength.Value ? "Stop" : "Restart";
+                return remain > 0 ? "Restart" : "Stop";
             }).ToReadOnlyReactivePropertySlim<string>().AddTo(this.disposables);
             this.SecondaryButtonText = this.state
                 .Select(s => this.state.Value == TimerState.Pausing ? "Resume" : "Pause")
@@ -69,15 +78,15 @@ namespace MultiTimer.ViewModels
             {
                 case TimerState.Idle:
                 case TimerState.Pausing:
-                    this.OnTimerStart(); break;
+                    this.OnTimerStarting(); break;
                 case TimerState.Running:
-                    if (this.stopwatch.Elapsed > this.currentTimerLength.Value)
+                    if (this.stopwatch.ElapsedMilliseconds > this.currentTimerLengthMilliseconds.Value)
                     {
-                        this.OnTimerStop();
+                        this.OnTimerStopped();
                     }
                     else
                     {
-                        this.OnTimerStart();
+                        this.OnTimerStarting();
                     }
                     break;
             }
@@ -87,33 +96,33 @@ namespace MultiTimer.ViewModels
             switch (this.state.Value)
             {
                 case TimerState.Running:
-                    this.OnTimerPause(); break;
+                    this.OnTimerPausing(); break;
                 case TimerState.Pausing:
-                    this.OnTimerResume(); break;
+                    this.OnTimerResuming(); break;
             }
         }
 
-        private void OnTimerStart()
+        private void OnTimerStarting()
         {
-            this.currentTimerLength.Value = TimeSpan.FromMinutes(this.TimerLength.Value);
+            this.currentTimerLengthMilliseconds.Value = 1000L * 60L * this.TimerLengthMinutes.Value;
             this.state.Value = TimerState.Running;
             this.stopwatch.Restart();
         }
 
-        private void OnTimerStop()
+        private void OnTimerStopped()
         {
             this.state.Value = TimerState.Idle;
             this.stopwatch.Reset();
             // alertをstop
         }
 
-        private void OnTimerPause()
+        private void OnTimerPausing()
         {
             this.state.Value = TimerState.Pausing;
             this.stopwatch.Stop();
         }
 
-        private void OnTimerResume()
+        private void OnTimerResuming()
         {
             this.state.Value = TimerState.Running;
             this.stopwatch.Start();

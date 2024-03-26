@@ -31,7 +31,7 @@ namespace MultiTimer.Controls
         public int CurrentValue
         {
             get { return (int)GetValue(CurrentValueProperty); }
-            set { SetValue(CurrentValueProperty, value); }
+            set { SetValue(CurrentValueProperty, WithinRange(value, this.MinValue, this.MaxValue)); }
         }
 
         private static void OnCurrentValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
