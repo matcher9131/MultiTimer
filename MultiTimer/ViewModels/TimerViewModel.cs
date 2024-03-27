@@ -10,29 +10,38 @@ using System.Linq;
 using System.Media;
 using System.Printing;
 using System.Reactive.Linq;
+using System.Windows.Media;
 
 namespace MultiTimer.ViewModels
 {
     public class TimerViewModel : BindableBase, IDisposable
     {
+        #region Non-reactive fields
         private readonly Stopwatch stopwatch = new();
+        #endregion
 
+        #region Reactive fields
         private readonly ReactivePropertySlim<TimerState> state;
         private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
         private readonly IObservable<long> finishObservable;
         private readonly ReactiveTimer alertTimer;
+        #endregion
 
+        #region Reactive properties
         public ReactivePropertySlim<int> TimerLengthMinutes { get; }
 
         public ReactivePropertySlim<bool> NeedsAlert { get; }
 
         public ReactiveProperty<long> RemainMilliseconds { get; }
 
+        public ReadOnlyReactivePropertySlim<SolidColorBrush> BackgroundBrush { get; }
+
         public ReadOnlyReactivePropertySlim<string> PrimaryButtonText { get; }
         public ReadOnlyReactivePropertySlim<string> SecondaryButtonText { get; }
 
         public ReactiveCommand ClickPrimaryButtonCommand { get; }
         public ReactiveCommand ClickSecondaryButtonCommand { get; }
+        #endregion
 
         public TimerViewModel()
         {
@@ -40,7 +49,7 @@ namespace MultiTimer.ViewModels
             this.currentTimerLengthMilliseconds = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
 
             this.TimerLengthMinutes = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
-            this.NeedsAlert = new ReactivePropertySlim<bool>(false).AddTo(this.disposables);
+            this.NeedsAlert = new ReactivePropertySlim<bool>(true).AddTo(this.disposables);
             this.RemainMilliseconds = Observable.Interval(TimeSpan.FromMilliseconds(100))
                 .Select(_ => {
                     if (this.state.Value == TimerState.Idle) return 1000L * 60L * this.TimerLengthMinutes.Value;
@@ -49,6 +58,12 @@ namespace MultiTimer.ViewModels
                 })
                 .ToReactiveProperty(mode: ReactivePropertyMode.DistinctUntilChanged)
                 .AddTo(this.disposables);
+            this.BackgroundBrush = this.RemainMilliseconds.Select(remain => remain switch
+            {
+                0 => RedBrush,
+                long ms when ms < 1000 * 30 => Brushes.Yellow,
+                _ => Brushes.White
+            }).ToReadOnlyReactivePropertySlim<SolidColorBrush>().AddTo(this.disposables);
 
             this.PrimaryButtonText = this.state.CombineLatest(this.RemainMilliseconds, Tuple.Create).Select(tuple =>
             {
@@ -61,11 +76,16 @@ namespace MultiTimer.ViewModels
                 .ToReadOnlyReactivePropertySlim<string>()
                 .AddTo(this.disposables);
 
-            this.ClickPrimaryButtonCommand = new ReactiveCommand().WithSubscribe(this.ClickPrimaryButton).AddTo(this.disposables);
-            this.ClickSecondaryButtonCommand = this.state
-                .Select(s => s == TimerState.Running || s == TimerState.Pausing)
+            this.ClickPrimaryButtonCommand = new ReactiveCommand().WithSubscribe(this.OnPrimaryButtonClick).AddTo(this.disposables);
+            this.ClickSecondaryButtonCommand = this.RemainMilliseconds.CombineLatest(this.state, Tuple.Create)
+                .Select(tuple => tuple switch {
+                    (0L, _) => false,
+                    (_, TimerState.Running) => true,
+                    (_, TimerState.Pausing) => true,
+                    _ => false
+                })
                 .ToReactiveCommand()
-                .WithSubscribe(this.ClickSecondaryButton)
+                .WithSubscribe(this.OnSecondaryButtonClick)
                 .AddTo(this.disposables);
 
             this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
@@ -75,7 +95,8 @@ namespace MultiTimer.ViewModels
             this.alertTimer.Subscribe(_ => SystemSounds.Exclamation.Play()).AddTo(this.disposables);
         }
 
-        public void ClickPrimaryButton()
+        #region Command methods
+        public void OnPrimaryButtonClick()
         {
             switch (this.state.Value)
             {
@@ -94,7 +115,7 @@ namespace MultiTimer.ViewModels
                     break;
             }
         }
-        public void ClickSecondaryButton()
+        public void OnSecondaryButtonClick()
         {
             switch (this.state.Value)
             {
@@ -104,7 +125,7 @@ namespace MultiTimer.ViewModels
                     this.OnTimerResuming(); break;
             }
         }
-
+        
         private void OnTimerStarting()
         {
             this.currentTimerLengthMilliseconds.Value = 1000L * 60L * this.TimerLengthMinutes.Value;
@@ -114,6 +135,7 @@ namespace MultiTimer.ViewModels
 
         private void OnTimerFinishing()
         {
+            this.stopwatch.Stop();
             if (this.NeedsAlert.Value)
             {
                 this.alertTimer.Start();
@@ -121,7 +143,6 @@ namespace MultiTimer.ViewModels
             else
             {
                 SystemSounds.Exclamation.Play();
-                this.OnTimerStopping();
             }
         }
 
@@ -143,6 +164,11 @@ namespace MultiTimer.ViewModels
             this.state.Value = TimerState.Running;
             this.stopwatch.Start();
         }
+        #endregion
+
+        #region Const fields
+        private static readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromRgb(255, 128, 128));
+        #endregion
 
         #region IDisposable
         private readonly System.Reactive.Disposables.CompositeDisposable disposables = [];

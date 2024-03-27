@@ -10,10 +10,11 @@
     d:DataContext="{d:DesignInstance Type=vm:TimerViewModel}"
     prism:ViewModelLocator.AutoWireViewModel="True"
 >
-    <Grid Height="75" Width="375">
+    <Grid Height="75" Width="420" Background="{Binding BackgroundBrush.Value}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="25" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -26,7 +27,7 @@
             VerticalAlignment="Center"
             FontSize="48"
         />
-        <UniformGrid Grid.Row="0" Grid.Column="1" Columns="2">
+        <UniformGrid Grid.Column="1" Columns="2">
             <controls:IntegerUpDown
                 Width="75"
                 Height="30"
@@ -57,5 +58,14 @@
                 Command="{Binding ClickSecondaryButtonCommand}"
             />
         </UniformGrid>
+        <Button
+            Grid.Column="2" 
+            Height="20" 
+            Width="20"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Content="-"
+            Margin="0,5,0,0"
+        />
     </Grid>
 </UserControl>
