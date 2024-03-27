@@ -20,6 +20,7 @@ namespace MultiTimer.ViewModels
         private readonly ReactivePropertySlim<TimerState> state;
         private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
         private readonly IObservable<long> finishObservable;
+        private readonly ReactiveTimer alertTimer;
 
         public ReactivePropertySlim<int> TimerLengthMinutes { get; }
 
@@ -67,9 +68,11 @@ namespace MultiTimer.ViewModels
                 .WithSubscribe(this.ClickSecondaryButton)
                 .AddTo(this.disposables);
 
-            // TEMPORAL
             this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
-            this.finishObservable.Subscribe(_ => this.OnTimerStopping()).AddTo(this.disposables);
+            this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
+
+            this.alertTimer = new ReactiveTimer(TimeSpan.FromSeconds(1));
+            this.alertTimer.Subscribe(_ => SystemSounds.Exclamation.Play()).AddTo(this.disposables);
         }
 
         public void ClickPrimaryButton()
@@ -83,6 +86,10 @@ namespace MultiTimer.ViewModels
                     if (this.RemainMilliseconds.Value > 0)
                     {
                         this.OnTimerStarting();
+                    }
+                    else
+                    {
+                        this.OnTimerStopping();
                     }
                     break;
             }
@@ -105,11 +112,24 @@ namespace MultiTimer.ViewModels
             this.stopwatch.Restart();
         }
 
+        private void OnTimerFinishing()
+        {
+            if (this.NeedsAlert.Value)
+            {
+                this.alertTimer.Start();
+            }
+            else
+            {
+                SystemSounds.Exclamation.Play();
+                this.OnTimerStopping();
+            }
+        }
+
         private void OnTimerStopping()
         {
             this.state.Value = TimerState.Idle;
             this.stopwatch.Reset();
-            SystemSounds.Exclamation.Play();
+            this.alertTimer.Stop();
         }
 
         private void OnTimerPausing()
