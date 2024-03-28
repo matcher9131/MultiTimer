@@ -1,4 +1,5 @@
-﻿using MultiTimer.Utils;
+﻿using MultiTimer.Services;
+using MultiTimer.Utils;
 using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;
@@ -12,30 +13,34 @@ namespace MultiTimer.ViewModels
     public class MainWindowViewModel : BindableBase, IDisposable
     {
         private readonly IEventAggregator eventAggregator;
+        private readonly IConfirmDialogService confirmDialogService;
 
         public ObservableCollection<TimerViewModel> Timers { get; }
 
         public ReactiveCommand AddTimerCommand { get; }
 
 
-        public MainWindowViewModel(IEventAggregator eventAggregator)
+        public MainWindowViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
         {
             this.eventAggregator = eventAggregator;
             this.eventAggregator.GetEvent<RemoveSelfEvent>().Subscribe(this.RemoveTimer, ThreadOption.UIThread);
 
-            this.Timers = [new TimerViewModel(this.eventAggregator)];
+            this.confirmDialogService = confirmDialogService;
+
+            this.Timers = [new TimerViewModel(this.eventAggregator, this.confirmDialogService)];
 
             this.AddTimerCommand = new ReactiveCommand().WithSubscribe(this.AddTimer).AddTo(this.disposables);
         }
 
         public void AddTimer()
         {
-            this.Timers.Add(new TimerViewModel(this.eventAggregator));
+            this.Timers.Add(new TimerViewModel(this.eventAggregator, this.confirmDialogService));
         }
 
         public void RemoveTimer(TimerViewModel timerViewModel)
         {
             this.Timers.Remove(timerViewModel);
+            timerViewModel.Dispose();
         }
 
         #region IDisposable

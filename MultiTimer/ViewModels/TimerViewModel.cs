@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using MultiTimer.Services;
+using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;
@@ -21,6 +22,7 @@ namespace MultiTimer.ViewModels
         #region Non-reactive fields
         private readonly Stopwatch stopwatch = new();
         private readonly IEventAggregator eventAggregator;
+        private readonly IConfirmDialogService confirmDialogService;
         #endregion
 
         #region Reactive fields
@@ -28,11 +30,6 @@ namespace MultiTimer.ViewModels
         private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
         private readonly IObservable<long> finishObservable;
         private readonly ReactiveTimer alertTimer;
-        #endregion
-
-        #region Non-reactive properties
-        //[Dependency]
-        //public IEventAggregator EventAggregator { get; set; }
         #endregion
 
         #region Reactive properties
@@ -49,12 +46,13 @@ namespace MultiTimer.ViewModels
 
         public ReactiveCommand ClickPrimaryButtonCommand { get; }
         public ReactiveCommand ClickSecondaryButtonCommand { get; }
-        public ReactiveCommand RemoveSelfCommand { get; }
+        public ReactiveCommand ClickRemoveButtonCommand { get; }
         #endregion
 
-        public TimerViewModel(IEventAggregator eventAggregator)
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
         {
             this.eventAggregator = eventAggregator;
+            this.confirmDialogService = confirmDialogService;
 
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
             this.currentTimerLengthMilliseconds = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
@@ -87,7 +85,7 @@ namespace MultiTimer.ViewModels
                 .ToReadOnlyReactivePropertySlim<string>()
                 .AddTo(this.disposables);
 
-            this.ClickPrimaryButtonCommand = new ReactiveCommand().WithSubscribe(this.OnPrimaryButtonClick).AddTo(this.disposables);
+            this.ClickPrimaryButtonCommand = new ReactiveCommand().WithSubscribe(this.OnPrimaryButtonClicked).AddTo(this.disposables);
             this.ClickSecondaryButtonCommand = this.RemainMilliseconds.CombineLatest(this.state, Tuple.Create)
                 .Select(tuple => tuple switch {
                     (0L, _) => false,
@@ -96,13 +94,9 @@ namespace MultiTimer.ViewModels
                     _ => false
                 })
                 .ToReactiveCommand()
-                .WithSubscribe(this.OnSecondaryButtonClick)
+                .WithSubscribe(this.OnSecondaryButtonClicked)
                 .AddTo(this.disposables);
-            this.RemoveSelfCommand = this.state
-                .Select(s => s == TimerState.Idle)
-                .ToReactiveCommand()
-                .WithSubscribe(this.RemoveSelf)
-                .AddTo(this.disposables);
+            this.ClickRemoveButtonCommand = new ReactiveCommand().WithSubscribe(this.OnRemoveButtonClicked).AddTo(this.disposables);
 
             this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
             this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
@@ -112,7 +106,7 @@ namespace MultiTimer.ViewModels
         }
 
         #region Command methods
-        public void OnPrimaryButtonClick()
+        public void OnPrimaryButtonClicked()
         {
             switch (this.state.Value)
             {
@@ -131,7 +125,7 @@ namespace MultiTimer.ViewModels
                     break;
             }
         }
-        public void OnSecondaryButtonClick()
+        public void OnSecondaryButtonClicked()
         {
             switch (this.state.Value)
             {
@@ -181,10 +175,13 @@ namespace MultiTimer.ViewModels
             this.stopwatch.Start();
         }
 
-        private void RemoveSelf()
+        private void OnRemoveButtonClicked()
         {
-            // this.EventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
-            this.eventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
+            if (this.state.Value == TimerState.Idle || this.confirmDialogService.ShowDialog("本当に削除しますか？"))
+            {
+                this.stopwatch.Stop();
+                this.eventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
+            }
         }
         #endregion
 
