@@ -1,4 +1,4 @@
-﻿using MultiTimer.ViewModels;
+﻿using MultiTimer.Services;
 using MultiTimer.Views;
 using Prism.Ioc;
 using System.Windows;
@@ -16,7 +16,8 @@ namespace MultiTimer
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
-        {   
+        {
+            containerRegistry.RegisterSingleton<IConfirmDialogService, ConfirmDialogService>();
         }
     }
 }

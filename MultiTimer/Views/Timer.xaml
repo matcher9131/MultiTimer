@@ -67,7 +67,7 @@
             VerticalAlignment="Top"
             Content="-"
             Margin="0,5,0,0"
-            Command="{Binding RemoveSelfCommand}"
+            Command="{Binding ClickRemoveButtonCommand}"
         />
     </Grid>
 </UserControl>
