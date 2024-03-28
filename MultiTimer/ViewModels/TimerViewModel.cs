@@ -1,4 +1,5 @@
 ﻿using Prism.Commands;
+using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;
 using Reactive.Bindings.Extensions;
@@ -11,6 +12,7 @@ using System.Media;
 using System.Printing;
 using System.Reactive.Linq;
 using System.Windows.Media;
+using Unity;
 
 namespace MultiTimer.ViewModels
 {
@@ -25,6 +27,11 @@ namespace MultiTimer.ViewModels
         private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
         private readonly IObservable<long> finishObservable;
         private readonly ReactiveTimer alertTimer;
+        #endregion
+
+        #region Non-reactive properties
+        [Dependency]
+        public IEventAggregator EventAggregator { get; set; }
         #endregion
 
         #region Reactive properties
@@ -164,15 +171,23 @@ namespace MultiTimer.ViewModels
             this.state.Value = TimerState.Running;
             this.stopwatch.Start();
         }
+
+        private void OnRemovingSelf()
+        {
+            this.EventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
+        }
         #endregion
 
         #region Const fields
-        private static readonly SolidColorBrush RedBrush = new SolidColorBrush(Color.FromRgb(255, 128, 128));
+        private static readonly SolidColorBrush RedBrush = new(Color.FromRgb(255, 128, 128));
         #endregion
 
         #region IDisposable
         private readonly System.Reactive.Disposables.CompositeDisposable disposables = [];
-        public void Dispose() => this.disposables.Dispose();
+        public void Dispose()
+        {
+            this.disposables.Dispose();
+        }
         #endregion
     }
 }
