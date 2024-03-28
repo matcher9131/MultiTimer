@@ -1,11 +1,13 @@
-﻿<prism:PrismApplication x:Class="MultiTimer.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:MultiTimer"
-             xmlns:prism="http://prismlibrary.com/"
-             xmlns:conv="clr-namespace:MultiTimer.Converters"
+﻿<prism:PrismApplication
+    x:Class="MultiTimer.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:MultiTimer"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:conv="clr-namespace:MultiTimer.Converters"
 >
     <Application.Resources>
-        <conv:TimeSpanConverter x:Key="TimeSpanConverter" />
+        <conv:MillisecondsConverter x:Key="MillisecondsConverter" />
+        <SolidColorBrush x:Key="ExclamationBrush" Color="Yellow" />
     </Application.Resources>
 </prism:PrismApplication>

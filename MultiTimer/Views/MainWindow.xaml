@@ -1,10 +1,52 @@
-﻿<Window x:Class="MultiTimer.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:prism="http://prismlibrary.com/"
-        prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="{Binding Title}" Height="350" Width="525" >
-    <Grid>
-        <ContentControl prism:RegionManager.RegionName="ContentRegion" />
-    </Grid>
+﻿<Window
+    x:Class="MultiTimer.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:v="clr-namespace:MultiTimer.Views"
+    xmlns:vm="clr-namespace:MultiTimer.ViewModels"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Title="MultiTimer" 
+    SizeToContent="WidthAndHeight"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
+>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <Button
+                Width="30"
+                Height="30"
+                HorizontalAlignment="Left"
+                Margin="5,5"
+                Content="+"
+                FontSize="16"
+                Command="{Binding AddTimerCommand}"
+            />
+        </StackPanel>
+        <ItemsControl ItemsSource="{Binding Timers}">
+            <ItemsControl.Template>
+                <ControlTemplate TargetType="ItemsControl">
+                    <Border>
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                        >
+                            <ItemsPresenter Margin="5" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <v:Timer />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
 </Window>

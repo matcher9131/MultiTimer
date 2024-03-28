@@ -1,4 +1,5 @@
-﻿using MultiTimer.Views;
+﻿using MultiTimer.ViewModels;
+using MultiTimer.Views;
 using Prism.Ioc;
 using System.Windows;
 
@@ -15,8 +16,7 @@ namespace MultiTimer
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
-        {
-
+        {   
         }
     }
 }
