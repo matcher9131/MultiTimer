@@ -20,6 +20,7 @@ namespace MultiTimer.ViewModels
     {
         #region Non-reactive fields
         private readonly Stopwatch stopwatch = new();
+        private readonly IEventAggregator eventAggregator;
         #endregion
 
         #region Reactive fields
@@ -30,8 +31,8 @@ namespace MultiTimer.ViewModels
         #endregion
 
         #region Non-reactive properties
-        [Dependency]
-        public IEventAggregator EventAggregator { get; set; }
+        //[Dependency]
+        //public IEventAggregator EventAggregator { get; set; }
         #endregion
 
         #region Reactive properties
@@ -48,10 +49,13 @@ namespace MultiTimer.ViewModels
 
         public ReactiveCommand ClickPrimaryButtonCommand { get; }
         public ReactiveCommand ClickSecondaryButtonCommand { get; }
+        public ReactiveCommand RemoveSelfCommand { get; }
         #endregion
 
-        public TimerViewModel()
+        public TimerViewModel(IEventAggregator eventAggregator)
         {
+            this.eventAggregator = eventAggregator;
+
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
             this.currentTimerLengthMilliseconds = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
 
@@ -93,6 +97,11 @@ namespace MultiTimer.ViewModels
                 })
                 .ToReactiveCommand()
                 .WithSubscribe(this.OnSecondaryButtonClick)
+                .AddTo(this.disposables);
+            this.RemoveSelfCommand = this.state
+                .Select(s => s == TimerState.Idle)
+                .ToReactiveCommand()
+                .WithSubscribe(this.RemoveSelf)
                 .AddTo(this.disposables);
 
             this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
@@ -172,9 +181,10 @@ namespace MultiTimer.ViewModels
             this.stopwatch.Start();
         }
 
-        private void OnRemovingSelf()
+        private void RemoveSelf()
         {
-            this.EventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
+            // this.EventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
+            this.eventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
         }
         #endregion
 

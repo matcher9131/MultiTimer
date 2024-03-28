@@ -1,14 +1,15 @@
-﻿<UserControl
+﻿<!-- AutoWireViewModelは使わない -->
+<UserControl
     x:Class="MultiTimer.Views.Timer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:vm="clr-namespace:MultiTimer.ViewModels" 
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:MultiTimer.Controls"
+    xmlns:controls="clr-namespace:MultiTimer.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=vm:TimerViewModel}"
-    prism:ViewModelLocator.AutoWireViewModel="True"
 >
     <Grid Height="75" Width="420" Background="{Binding BackgroundBrush.Value}">
         <Grid.ColumnDefinitions>
@@ -66,6 +67,7 @@
             VerticalAlignment="Top"
             Content="-"
             Margin="0,5,0,0"
+            Command="{Binding RemoveSelfCommand}"
         />
     </Grid>
 </UserControl>

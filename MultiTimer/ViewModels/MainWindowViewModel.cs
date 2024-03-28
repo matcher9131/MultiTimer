@@ -11,26 +11,31 @@ namespace MultiTimer.ViewModels
 {
     public class MainWindowViewModel : BindableBase, IDisposable
     {
-        public ObservableCollection<TimerViewModel> Items { get; } = [new TimerViewModel()];
+        private readonly IEventAggregator eventAggregator;
+
+        public ObservableCollection<TimerViewModel> Timers { get; }
 
         public ReactiveCommand AddTimerCommand { get; }
 
 
         public MainWindowViewModel(IEventAggregator eventAggregator)
         {
-            eventAggregator.GetEvent<RemoveSelfEvent>().Subscribe(this.RemoveTimer, ThreadOption.UIThread);
+            this.eventAggregator = eventAggregator;
+            this.eventAggregator.GetEvent<RemoveSelfEvent>().Subscribe(this.RemoveTimer, ThreadOption.UIThread);
+
+            this.Timers = [new TimerViewModel(this.eventAggregator)];
 
             this.AddTimerCommand = new ReactiveCommand().WithSubscribe(this.AddTimer).AddTo(this.disposables);
         }
 
         public void AddTimer()
         {
-            this.Items.Add(new TimerViewModel());
+            this.Timers.Add(new TimerViewModel(this.eventAggregator));
         }
 
         public void RemoveTimer(TimerViewModel timerViewModel)
         {
-            this.Items.Remove(timerViewModel);
+            this.Timers.Remove(timerViewModel);
         }
 
         #region IDisposable
