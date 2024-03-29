@@ -235,10 +235,10 @@ namespace MultiTimer.Controls
 
 
         #region Utils
-        [GeneratedRegex(@"-?\d*")]
+        [GeneratedRegex(@"^-?\d*$")]
         private static partial Regex integerExtraZeroRegex();
 
-        [GeneratedRegex(@"0|[1-9]\d*|-[1-9]\d*")]
+        [GeneratedRegex(@"^0|[1-9]\d*|-[1-9]\d*$")]
         private static partial Regex integerRegex();
 
         private static int WithinRange(int value, int min, int max) => value < min ? min : value > max ? max : value;
