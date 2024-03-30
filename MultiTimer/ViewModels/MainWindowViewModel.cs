@@ -1,5 +1,4 @@
 ﻿using MultiTimer.Services;
-using MultiTimer.Utils;
 using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;

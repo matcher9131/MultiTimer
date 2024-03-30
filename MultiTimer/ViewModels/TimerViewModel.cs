@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Media;
 using System.Printing;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Media;
 using Unity;
@@ -49,7 +50,7 @@ namespace MultiTimer.ViewModels
         public ReactiveCommand ClickRemoveButtonCommand { get; }
         #endregion
 
-        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler? scheduler = null)
         {
             this.eventAggregator = eventAggregator;
             this.confirmDialogService = confirmDialogService;
@@ -59,8 +60,10 @@ namespace MultiTimer.ViewModels
 
             this.TimerLengthMinutes = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
             this.NeedsAlert = new ReactivePropertySlim<bool>(true).AddTo(this.disposables);
-            this.RemainMilliseconds = Observable.Interval(TimeSpan.FromMilliseconds(100))
-                .Select(_ => {
+            this.RemainMilliseconds = (scheduler == null
+                    ? Observable.Interval(TimeSpan.FromMilliseconds(100))
+                    : Observable.Interval(TimeSpan.FromMilliseconds(100), scheduler)
+                ).Select(_ => {
                     if (this.state.Value == TimerState.Idle) return 1000L * 60L * this.TimerLengthMinutes.Value;
                     var remain = this.currentTimerLengthMilliseconds.Value - this.stopwatch.ElapsedMilliseconds;
                     return remain < 0L ? 0L : remain;
