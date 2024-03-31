@@ -23,7 +23,7 @@
         <TextBlock
             Grid.Column="0"
             Grid.Row="0"
-            Text="{Binding RemainMilliseconds.Value, Converter={StaticResource MillisecondsConverter}}"
+            Text="{Binding RemainTicks.Value, Converter={StaticResource TicksConverter}}"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
             FontSize="48"

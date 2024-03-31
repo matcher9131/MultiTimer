@@ -1,4 +1,5 @@
-﻿using MultiTimer.Services;
+﻿using MultiTimer.Models;
+using MultiTimer.Services;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
@@ -21,14 +22,14 @@ namespace MultiTimer.ViewModels
     public class TimerViewModel : BindableBase, IDisposable
     {
         #region Non-reactive fields
-        private readonly Stopwatch stopwatch = new();
+        private readonly SchedulerStopwatch stopwatch;
         private readonly IEventAggregator eventAggregator;
         private readonly IConfirmDialogService confirmDialogService;
         #endregion
 
         #region Reactive fields
         private readonly ReactivePropertySlim<TimerState> state;
-        private readonly ReactivePropertySlim<long> currentTimerLengthMilliseconds;
+        private readonly ReactivePropertySlim<long> currentTimerLengthTicks;
         private readonly IObservable<long> finishObservable;
         private readonly ReactiveTimer alertTimer;
         #endregion
@@ -38,7 +39,7 @@ namespace MultiTimer.ViewModels
 
         public ReactivePropertySlim<bool> NeedsAlert { get; }
 
-        public ReactiveProperty<long> RemainMilliseconds { get; }
+        public ReactiveProperty<long> RemainTicks { get; }
 
         public ReadOnlyReactivePropertySlim<SolidColorBrush> BackgroundBrush { get; }
 
@@ -50,34 +51,38 @@ namespace MultiTimer.ViewModels
         public ReactiveCommand ClickRemoveButtonCommand { get; }
         #endregion
 
-        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler? scheduler = null)
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
+            : this(eventAggregator, confirmDialogService, Scheduler.Default)
         {
+        }
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler scheduler)
+        {
+            this.stopwatch = new SchedulerStopwatch(scheduler);
             this.eventAggregator = eventAggregator;
             this.confirmDialogService = confirmDialogService;
 
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
-            this.currentTimerLengthMilliseconds = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
+            this.currentTimerLengthTicks = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
 
             this.TimerLengthMinutes = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
             this.NeedsAlert = new ReactivePropertySlim<bool>(true).AddTo(this.disposables);
-            this.RemainMilliseconds = (scheduler == null
-                    ? Observable.Interval(TimeSpan.FromMilliseconds(100))
-                    : Observable.Interval(TimeSpan.FromMilliseconds(100), scheduler)
-                ).Select(_ => {
-                    if (this.state.Value == TimerState.Idle) return 1000L * 60L * this.TimerLengthMinutes.Value;
-                    var remain = this.currentTimerLengthMilliseconds.Value - this.stopwatch.ElapsedMilliseconds;
+            this.RemainTicks = Observable.Interval(TimeSpan.FromMilliseconds(100), scheduler)
+                .Select(_ => {
+                    // 10000 ticks in a millisecond
+                    if (this.state.Value == TimerState.Idle) return 10000L * 1000L * 60L * this.TimerLengthMinutes.Value;
+                    var remain = this.currentTimerLengthTicks.Value - this.stopwatch.ElapsedTicks;
                     return remain < 0L ? 0L : remain;
                 })
                 .ToReactiveProperty(mode: ReactivePropertyMode.DistinctUntilChanged)
                 .AddTo(this.disposables);
-            this.BackgroundBrush = this.RemainMilliseconds.Select(remain => remain switch
+            this.BackgroundBrush = this.RemainTicks.Select(remain => remain switch
             {
                 0 => RedBrush,
-                long ms when ms < 1000 * 30 => Brushes.Yellow,
+                long ticks when ticks < 10000L * 1000L * 30L => Brushes.Yellow,
                 _ => Brushes.White
             }).ToReadOnlyReactivePropertySlim<SolidColorBrush>().AddTo(this.disposables);
 
-            this.PrimaryButtonText = this.state.CombineLatest(this.RemainMilliseconds, Tuple.Create).Select(tuple =>
+            this.PrimaryButtonText = this.state.CombineLatest(this.RemainTicks, Tuple.Create).Select(tuple =>
             {
                 var (s, remain) = tuple;
                 if (s == TimerState.Idle) return "Start";
@@ -89,7 +94,7 @@ namespace MultiTimer.ViewModels
                 .AddTo(this.disposables);
 
             this.ClickPrimaryButtonCommand = new ReactiveCommand().WithSubscribe(this.OnPrimaryButtonClicked).AddTo(this.disposables);
-            this.ClickSecondaryButtonCommand = this.RemainMilliseconds.CombineLatest(this.state, Tuple.Create)
+            this.ClickSecondaryButtonCommand = this.RemainTicks.CombineLatest(this.state, Tuple.Create)
                 .Select(tuple => tuple switch {
                     (0L, _) => false,
                     (_, TimerState.Running) => true,
@@ -101,7 +106,7 @@ namespace MultiTimer.ViewModels
                 .AddTo(this.disposables);
             this.ClickRemoveButtonCommand = new ReactiveCommand().WithSubscribe(this.OnRemoveButtonClicked).AddTo(this.disposables);
 
-            this.finishObservable = this.RemainMilliseconds.Where(remain => remain == 0);
+            this.finishObservable = this.RemainTicks.Where(remain => remain == 0);
             this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
 
             this.alertTimer = new ReactiveTimer(TimeSpan.FromSeconds(1));
@@ -117,7 +122,7 @@ namespace MultiTimer.ViewModels
                 case TimerState.Pausing:
                     this.OnTimerStarting(); break;
                 case TimerState.Running:
-                    if (this.RemainMilliseconds.Value > 0)
+                    if (this.RemainTicks.Value > 0)
                     {
                         this.OnTimerStarting();
                     }
@@ -141,14 +146,14 @@ namespace MultiTimer.ViewModels
         
         private void OnTimerStarting()
         {
-            this.currentTimerLengthMilliseconds.Value = 1000L * 60L * this.TimerLengthMinutes.Value;
+            this.currentTimerLengthTicks.Value = 10000L * 1000L * 60L * this.TimerLengthMinutes.Value;
             this.state.Value = TimerState.Running;
-            this.stopwatch.Restart();
+            this.stopwatch.StartNew();
         }
 
         private void OnTimerFinishing()
         {
-            this.stopwatch.Stop();
+            this.stopwatch.Pause();
             if (this.NeedsAlert.Value)
             {
                 this.alertTimer.Start();
@@ -162,20 +167,20 @@ namespace MultiTimer.ViewModels
         private void OnTimerStopping()
         {
             this.state.Value = TimerState.Idle;
-            this.stopwatch.Reset();
+            this.stopwatch.Stop();
             this.alertTimer.Stop();
         }
 
         private void OnTimerPausing()
         {
             this.state.Value = TimerState.Pausing;
-            this.stopwatch.Stop();
+            this.stopwatch.Pause();
         }
 
         private void OnTimerResuming()
         {
             this.state.Value = TimerState.Running;
-            this.stopwatch.Start();
+            this.stopwatch.Resume();
         }
 
         private void OnRemoveButtonClicked()

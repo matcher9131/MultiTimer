@@ -7,17 +7,12 @@ using System.Threading.Tasks;
 
 namespace MultiTimer.Models
 {
-    public class SchedulerStopwatch
+    public class SchedulerStopwatch(IScheduler scheduler)
     {
-        private readonly IScheduler scheduler;
+        private readonly IScheduler scheduler = scheduler;
         private IStopwatch? stopwatch = null;
         private long? pauseStartTicks = null;
         private long pauseSumTicks = 0;
-
-        public SchedulerStopwatch(IScheduler scheduler)
-        {
-            this.scheduler = scheduler;
-        }
 
         public long ElapsedTicks => this.pauseStartTicks is long pst
             ? pst - this.pauseSumTicks

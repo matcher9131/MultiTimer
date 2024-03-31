@@ -23,7 +23,7 @@ namespace TestProject
 
             Assert.True(vm.NeedsAlert.Value);
             Assert.Equal(15, vm.TimerLengthMinutes.Value);
-            Assert.Equal(1000L * 60L * 15L, vm.RemainMilliseconds.Value);
+            Assert.Equal(1000L * 60L * 15L, vm.RemainTicks.Value);
             Assert.Equal("Start", vm.PrimaryButtonText.Value);
             Assert.Equal("Pause", vm.SecondaryButtonText.Value);
             Assert.True(vm.ClickPrimaryButtonCommand.CanExecute());
@@ -61,11 +61,11 @@ namespace TestProject
 
             vm.ClickPrimaryButtonCommand.Execute(); // Running‚É‚·‚é
             vm.ClickSecondaryButtonCommand.Execute();
-            var remain = vm.RemainMilliseconds.Value;
+            var remain = vm.RemainTicks.Value;
             scheduler.AdvanceBy(TimeSpan.FromSeconds(10).Ticks);
 
             Assert.Equal("Resume", vm.SecondaryButtonText.Value);
-            Assert.Equal(remain, vm.RemainMilliseconds.Value);
+            Assert.Equal(remain, vm.RemainTicks.Value);
 
             vm.Dispose();
         }
