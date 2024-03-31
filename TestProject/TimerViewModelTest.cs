@@ -9,9 +9,6 @@ namespace TestProject
 {
     public class TimerViewModelTest
     {
-        // TODO: Stopwatchのモック
-        // （StopwatchをモックしないとRemainMillisecondsを使うテストが不安定で通ったり通らなかったりする）
-
         [Fact(DisplayName = "初期状態の変数チェック")]
         public void IdleStateButtonsTest()
         {
@@ -23,7 +20,7 @@ namespace TestProject
 
             Assert.True(vm.NeedsAlert.Value);
             Assert.Equal(15, vm.TimerLengthMinutes.Value);
-            Assert.Equal(1000L * 60L * 15L, vm.RemainTicks.Value);
+            Assert.Equal(10000L * 1000L * 60L * 15L, vm.RemainTicks.Value);
             Assert.Equal("Start", vm.PrimaryButtonText.Value);
             Assert.Equal("Pause", vm.SecondaryButtonText.Value);
             Assert.True(vm.ClickPrimaryButtonCommand.CanExecute());
@@ -70,7 +67,7 @@ namespace TestProject
             vm.Dispose();
         }
 
-        [Fact(DisplayName = "Pausing状態でSecondaryButtonをクリックするとSecondaryButtonのテキストが\"Pause\"になる")]
+        [Fact(DisplayName = "Pausing状態でSecondaryButtonをクリックするとSecondaryButtonのテキストが\"Pause\"になり、タイマーの値が減る")]
         public void ResumeTest()
         {
             var scheduler = new TestScheduler();
@@ -81,12 +78,12 @@ namespace TestProject
 
             vm.ClickPrimaryButtonCommand.Execute(); // Runningにする
             vm.ClickSecondaryButtonCommand.Execute(); // Pausingにする
-            // var remain = vm.RemainMilliseconds.Value;
+            var remain = vm.RemainTicks.Value;
             vm.ClickSecondaryButtonCommand.Execute(); // 再びRunningにする
             scheduler.AdvanceBy(TimeSpan.FromSeconds(10).Ticks);
 
             Assert.Equal("Pause", vm.SecondaryButtonText.Value);
-            // Assert.True(remain > vm.RemainMilliseconds.Value);
+            Assert.True(remain > vm.RemainTicks.Value);
 
             vm.Dispose();
         }
