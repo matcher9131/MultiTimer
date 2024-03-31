@@ -25,6 +25,7 @@ namespace MultiTimer.ViewModels
         private readonly SchedulerStopwatch stopwatch;
         private readonly IEventAggregator eventAggregator;
         private readonly IConfirmDialogService confirmDialogService;
+        private readonly IAlertSound alertSound;
         #endregion
 
         #region Reactive fields
@@ -52,14 +53,15 @@ namespace MultiTimer.ViewModels
         #endregion
 
         public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
-            : this(eventAggregator, confirmDialogService, Scheduler.Default)
+            : this(eventAggregator, confirmDialogService, Scheduler.Default, new AlertSound())
         {
         }
-        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler scheduler)
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler scheduler, IAlertSound alertSound)
         {
             this.stopwatch = new SchedulerStopwatch(scheduler);
             this.eventAggregator = eventAggregator;
             this.confirmDialogService = confirmDialogService;
+            this.alertSound = alertSound;
 
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
             this.currentTimerLengthTicks = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
@@ -109,8 +111,8 @@ namespace MultiTimer.ViewModels
             this.finishObservable = this.RemainTicks.Where(remain => remain == 0);
             this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
 
-            this.alertTimer = new ReactiveTimer(TimeSpan.FromSeconds(1));
-            this.alertTimer.Subscribe(_ => SystemSounds.Exclamation.Play()).AddTo(this.disposables);
+            this.alertTimer = new ReactiveTimer(TimeSpan.FromSeconds(1), scheduler);
+            this.alertTimer.Subscribe(_ => this.alertSound.Play()).AddTo(this.disposables);
         }
 
         #region Command methods
@@ -160,7 +162,7 @@ namespace MultiTimer.ViewModels
             }
             else
             {
-                SystemSounds.Exclamation.Play();
+                this.alertSound.Play();
             }
         }
 
