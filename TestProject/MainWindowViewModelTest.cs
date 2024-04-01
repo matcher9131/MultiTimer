@@ -59,5 +59,29 @@ namespace TestProject
             Assert.Equal(1, vm.Timers.Count);
             Assert.DoesNotContain(timerViewModel, vm.Timers);
         }
+
+        [Fact(DisplayName = "Timers内の先頭以外のTimerViewModelのMoveUpEventが実行されるとそのインスタンスと直前のインスタンスの順番が入れ替わる")]
+        public void MoveUpTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact(DisplayName = "Timers内の先頭のTimerViewModelでMoveUpEventが実行されても順番が変化しない")]
+        public void MoveUpDisabledTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact(DisplayName = "Timers内の末尾以外のTimerViewModelでMoveDownEventが実行されるとそのインスタンスと直後のインスタンスの順番が入れ替わる")]
+        public void MoveDownTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact(DisplayName = "Timers内の末尾のTimerViewModelでMoveDownEventが実行されても順番が変化しない")]
+        public void MoveDownDisabledTest()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
