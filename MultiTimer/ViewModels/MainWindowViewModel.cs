@@ -1,4 +1,5 @@
-﻿using MultiTimer.Services;
+﻿using MultiTimer.Models.Events;
+using MultiTimer.Services;
 using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;
@@ -23,6 +24,8 @@ namespace MultiTimer.ViewModels
         {
             this.eventAggregator = eventAggregator;
             this.eventAggregator.GetEvent<RemoveSelfEvent>().Subscribe(this.RemoveTimer, ThreadOption.UIThread);
+            this.eventAggregator.GetEvent<MoveUpEvent>().Subscribe(this.MoveTimerUp, ThreadOption.UIThread);
+            this.eventAggregator.GetEvent<MoveDownEvent>().Subscribe(this.MoveTimerDown, ThreadOption.UIThread);
 
             this.confirmDialogService = confirmDialogService;
 
@@ -40,6 +43,24 @@ namespace MultiTimer.ViewModels
         {
             this.Timers.Remove(timerViewModel);
             timerViewModel.Dispose();
+        }
+
+        public void MoveTimerUp(TimerViewModel timerViewModel)
+        {
+            int index = this.Timers.IndexOf(timerViewModel);
+            if (index < 0) throw new ArgumentException("ViewModel is not found");
+            if (index == 0) return;
+
+            this.Timers.Move(index - 1, index);
+        }
+
+        public void MoveTimerDown(TimerViewModel timerViewModel)
+        {
+            int index = this.Timers.IndexOf(timerViewModel);
+            if (index < 0) throw new ArgumentException("ViewModel is not found");
+            if (index == this.Timers.Count - 1) return;
+
+            this.Timers.Move(index, index + 1);
         }
 
         #region IDisposable

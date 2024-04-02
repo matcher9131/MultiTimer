@@ -1,6 +1,7 @@
 using Microsoft.Reactive.Testing;
 using Moq;
 using MultiTimer.Models;
+using MultiTimer.Models.Events;
 using MultiTimer.Services;
 using MultiTimer.ViewModels;
 using Prism.Events;
