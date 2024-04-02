@@ -1,4 +1,5 @@
 ﻿using MultiTimer.Models;
+using MultiTimer.Models.Events;
 using MultiTimer.Services;
 using Prism.Commands;
 using Prism.Events;
@@ -50,6 +51,8 @@ namespace MultiTimer.ViewModels
         public ReactiveCommand ClickPrimaryButtonCommand { get; }
         public ReactiveCommand ClickSecondaryButtonCommand { get; }
         public ReactiveCommand ClickRemoveButtonCommand { get; }
+        public ReactiveCommand ClickMoveUpButtonCommand { get; }
+        public ReactiveCommand ClickMoveDownButtonCommand { get; }
         #endregion
 
         public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
@@ -107,6 +110,8 @@ namespace MultiTimer.ViewModels
                 .WithSubscribe(this.OnSecondaryButtonClicked)
                 .AddTo(this.disposables);
             this.ClickRemoveButtonCommand = new ReactiveCommand().WithSubscribe(this.OnRemoveButtonClicked).AddTo(this.disposables);
+            this.ClickMoveUpButtonCommand = new ReactiveCommand().WithSubscribe(this.OnMoveUpButtonClicked).AddTo(this.disposables);
+            this.ClickMoveDownButtonCommand = new ReactiveCommand().WithSubscribe(this.OnMoveDownButtonClicked).AddTo(this.disposables);
 
             this.finishObservable = this.RemainTicks.Where(remain => remain == 0);
             this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
@@ -192,6 +197,16 @@ namespace MultiTimer.ViewModels
                 this.stopwatch.Stop();
                 this.eventAggregator.GetEvent<RemoveSelfEvent>().Publish(this);
             }
+        }
+
+        private void OnMoveUpButtonClicked()
+        {
+            this.eventAggregator.GetEvent<MoveUpEvent>().Publish(this);
+        }
+
+        private void OnMoveDownButtonClicked()
+        {
+            this.eventAggregator.GetEvent<MoveDownEvent>().Publish(this);
         }
         #endregion
 

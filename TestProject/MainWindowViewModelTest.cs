@@ -1,4 +1,5 @@
 ﻿using Moq;
+using MultiTimer.Models.Events;
 using MultiTimer.Services;
 using MultiTimer.ViewModels;
 using Prism.Events;
@@ -72,6 +73,12 @@ namespace TestProject
             throw new NotImplementedException();
         }
 
+        [Fact(DisplayName = "Timersの要素でないTimerViewModelでMoveUpEventが実行されたときに例外を投げる")]
+        public void MoveUpInvalidTest()
+        {
+            throw new NotImplementedException();
+        }
+
         [Fact(DisplayName = "Timers内の末尾以外のTimerViewModelでMoveDownEventが実行されるとそのインスタンスと直後のインスタンスの順番が入れ替わる")]
         public void MoveDownTest()
         {
@@ -80,6 +87,12 @@ namespace TestProject
 
         [Fact(DisplayName = "Timers内の末尾のTimerViewModelでMoveDownEventが実行されても順番が変化しない")]
         public void MoveDownDisabledTest()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact(DisplayName = "Timersの要素でないTimerViewModelでMoveDownEventが実行されたときに例外を投げる")]
+        public void MoveDownInvalidTest()
         {
             throw new NotImplementedException();
         }
