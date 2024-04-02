@@ -8,14 +8,14 @@ using System.Windows.Data;
 
 namespace MultiTimer.Converters
 {
-    public class MillisecondsConverter : IValueConverter
+    public class TicksConverter : IValueConverter
     {
-        // long(milliseconds) -> string
+        // long(ticks) -> string
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is not long milliseconds) throw new ArgumentException("Type of 'value' is invalid");
+            if (value is not long ticks) throw new ArgumentException("Type of 'value' is invalid");
 
-            var time = TimeSpan.FromMilliseconds(milliseconds);
+            var time = TimeSpan.FromTicks(ticks);
             return $"{(int)time.TotalHours:D}:{time.Minutes:D2}:{time.Seconds:D2}";
             
         }

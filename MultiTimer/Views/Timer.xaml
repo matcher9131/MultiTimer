@@ -23,7 +23,7 @@
         <TextBlock
             Grid.Column="0"
             Grid.Row="0"
-            Text="{Binding RemainMilliseconds.Value, Converter={StaticResource MillisecondsConverter}}"
+            Text="{Binding RemainTicks.Value, Converter={StaticResource TicksConverter}}"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
             FontSize="48"
@@ -59,15 +59,32 @@
                 Command="{Binding ClickSecondaryButtonCommand}"
             />
         </UniformGrid>
-        <Button
-            Grid.Column="2" 
-            Height="20" 
-            Width="20"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Content="-"
-            Margin="0,5,0,0"
-            Command="{Binding ClickRemoveButtonCommand}"
-        />
+        <UniformGrid Grid.Column="2" Columns="1">
+            <Button
+                Height="20" 
+                Width="20"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Content="-"
+                Command="{Binding ClickRemoveButtonCommand}"
+            />
+            <Button
+                Height="20" 
+                Width="20"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Content="↑"
+                Command="{Binding ClickMoveUpButtonCommand}"
+            />
+            <Button
+                Height="20" 
+                Width="20"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Content="↓"
+                Command="{Binding ClickMoveDownButtonCommand}"
+            />
+        </UniformGrid>
+        
     </Grid>
 </UserControl>
