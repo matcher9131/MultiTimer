@@ -12,12 +12,12 @@ namespace TestProject
 {
     public class TimerViewModelTest
     {
-        private static (TimerViewModel vm, TestScheduler scheduler, Mock<IEventAggregator> eventAggregatorMock, Mock<IConfirmDialogService> confirmDialogService, Mock<IAlertSound> alertSoundMock) CreateInstance()
+        private static (TimerViewModel vm, TestScheduler scheduler, Mock<IEventAggregator> eventAggregatorMock, Mock<IConfirmDialogService> confirmDialogService, Mock<IAlarmSound> alertSoundMock) CreateInstance()
         {
             var scheduler = new TestScheduler();
             var eventAggregatorMock = new Mock<IEventAggregator>();
             var confirmDialogServiceMock = new Mock<IConfirmDialogService>();
-            var alertSoundMock = new Mock<IAlertSound>();
+            var alertSoundMock = new Mock<IAlarmSound>();
             var vm = new TimerViewModel(eventAggregatorMock.Object, confirmDialogServiceMock.Object, scheduler, alertSoundMock.Object);
             return (vm, scheduler, eventAggregatorMock, confirmDialogServiceMock, alertSoundMock);
         }
@@ -28,7 +28,7 @@ namespace TestProject
             var (vm, scheduler, _, _, _) = CreateInstance();
             scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
 
-            Assert.True(vm.NeedsAlert.Value);
+            Assert.True(vm.NeedsAlarm.Value);
             Assert.Equal(15, vm.TimerLengthMinutes.Value);
             Assert.Equal(10000L * 1000L * 60L * 15L, vm.RemainTicks.Value);
             Assert.Equal("Start", vm.PrimaryButtonText.Value);
@@ -161,7 +161,7 @@ namespace TestProject
             alertSoundMock.Setup(x => x.Play());
             scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
-            vm.NeedsAlert.Value = true;
+            vm.NeedsAlarm.Value = true;
             vm.TimerLengthMinutes.Value = 1;
             vm.ClickPrimaryButtonCommand.Execute(); // Running‚É‚·‚é
             scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
@@ -178,7 +178,7 @@ namespace TestProject
             alertSoundMock.Setup(x => x.Play());
             scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
-            vm.NeedsAlert.Value = false;
+            vm.NeedsAlarm.Value = false;
             vm.TimerLengthMinutes.Value = 1;
             vm.ClickPrimaryButtonCommand.Execute(); // Running‚É‚·‚é
             scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
