@@ -1,22 +1,15 @@
 ﻿using MultiTimer.Models;
 using MultiTimer.Models.Events;
 using MultiTimer.Services;
-using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
 using Reactive.Bindings;
 using Reactive.Bindings.Extensions;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Media;
-using System.Printing;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Windows.Media;
-using Unity;
 
 namespace MultiTimer.ViewModels
 {
