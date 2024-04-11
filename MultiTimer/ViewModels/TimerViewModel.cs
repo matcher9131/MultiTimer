@@ -26,20 +26,20 @@ namespace MultiTimer.ViewModels
         private readonly SchedulerStopwatch stopwatch;
         private readonly IEventAggregator eventAggregator;
         private readonly IConfirmDialogService confirmDialogService;
-        private readonly IAlertSound alertSound;
+        private readonly IAlarmSound alarmSound;
         #endregion
 
         #region Reactive fields
         private readonly ReactivePropertySlim<TimerState> state;
         private readonly ReactivePropertySlim<long> currentTimerLengthTicks;
         private readonly IObservable<long> finishObservable;
-        private readonly ReactiveTimer alertTimer;
+        private readonly ReactiveTimer alarmTimer;
         #endregion
 
         #region Reactive properties
         public ReactivePropertySlim<int> TimerLengthMinutes { get; }
 
-        public ReactivePropertySlim<bool> NeedsAlert { get; }
+        public ReactivePropertySlim<bool> NeedsAlarm { get; }
 
         public ReactiveProperty<long> RemainTicks { get; }
 
@@ -56,21 +56,21 @@ namespace MultiTimer.ViewModels
         #endregion
 
         public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService)
-            : this(eventAggregator, confirmDialogService, Scheduler.Default, new AlertSound())
+            : this(eventAggregator, confirmDialogService, Scheduler.Default, new AlarmSound())
         {
         }
-        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler scheduler, IAlertSound alertSound)
+        public TimerViewModel(IEventAggregator eventAggregator, IConfirmDialogService confirmDialogService, IScheduler scheduler, IAlarmSound alarmSound)
         {
             this.stopwatch = new SchedulerStopwatch(scheduler);
             this.eventAggregator = eventAggregator;
             this.confirmDialogService = confirmDialogService;
-            this.alertSound = alertSound;
+            this.alarmSound = alarmSound;
 
             this.state = new ReactivePropertySlim<TimerState>(TimerState.Idle).AddTo(this.disposables);
             this.currentTimerLengthTicks = new ReactivePropertySlim<long>(0L).AddTo(this.disposables);
 
             this.TimerLengthMinutes = new ReactivePropertySlim<int>(15).AddTo(this.disposables);
-            this.NeedsAlert = new ReactivePropertySlim<bool>(true).AddTo(this.disposables);
+            this.NeedsAlarm = new ReactivePropertySlim<bool>(true).AddTo(this.disposables);
             this.RemainTicks = Observable.Interval(TimeSpan.FromMilliseconds(100), scheduler)
                 .Select(_ => {
                     // 10000 ticks in a millisecond
@@ -116,8 +116,8 @@ namespace MultiTimer.ViewModels
             this.finishObservable = this.RemainTicks.Where(remain => remain == 0);
             this.finishObservable.Subscribe(_ => this.OnTimerFinishing()).AddTo(this.disposables);
 
-            this.alertTimer = new ReactiveTimer(TimeSpan.FromSeconds(1), scheduler);
-            this.alertTimer.Subscribe(_ => this.alertSound.Play()).AddTo(this.disposables);
+            this.alarmTimer = new ReactiveTimer(TimeSpan.FromSeconds(1), scheduler);
+            this.alarmTimer.Subscribe(_ => this.alarmSound.Play()).AddTo(this.disposables);
         }
 
         #region Command methods
@@ -161,13 +161,13 @@ namespace MultiTimer.ViewModels
         private void OnTimerFinishing()
         {
             this.stopwatch.Pause();
-            if (this.NeedsAlert.Value)
+            if (this.NeedsAlarm.Value)
             {
-                this.alertTimer.Start();
+                this.alarmTimer.Start();
             }
             else
             {
-                this.alertSound.Play();
+                this.alarmSound.Play();
             }
         }
 
@@ -175,7 +175,7 @@ namespace MultiTimer.ViewModels
         {
             this.state.Value = TimerState.Idle;
             this.stopwatch.Stop();
-            this.alertTimer.Stop();
+            this.alarmTimer.Stop();
         }
 
         private void OnTimerPausing()

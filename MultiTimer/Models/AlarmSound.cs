@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace MultiTimer.Models
 {
-    public interface IAlertSound
+    public interface IAlarmSound
     {
         void Play();
     }
 
-    public class AlertSound : IAlertSound
+    public class AlarmSound : IAlarmSound
     {
         public void Play()
         {

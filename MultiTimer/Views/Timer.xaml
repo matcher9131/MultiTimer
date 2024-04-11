@@ -4,7 +4,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:prism="http://prismlibrary.com/"
     xmlns:vm="clr-namespace:MultiTimer.ViewModels" 
     xmlns:controls="clr-namespace:MultiTimer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -41,8 +40,8 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 FontSize="16"
-                Content="Alert"
-                IsChecked="{Binding NeedsAlert.Value}"
+                Content="Alarm"
+                IsChecked="{Binding NeedsAlarm.Value}"
             />
             <Button
                 Width="75"
