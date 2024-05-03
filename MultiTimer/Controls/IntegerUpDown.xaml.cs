@@ -163,21 +163,13 @@ namespace MultiTimer.Controls
         {
             if (sender is not TextBox textbox) return;
 
-            
-            if (textbox.Text == "-")
+            if (int.TryParse(textbox.Text, out int value))
             {
-                // マイナス記号のみの状態でフォーカスから外れた場合はdefaultValueにする
-                // TEMPORARY
-                textbox.Text = "0";
+                textbox.Text = value.ToString();
             }
             else
             {
-                if (!integerRegex().IsMatch(textbox.Text))
-                {
-                    string sign = textbox.Text.StartsWith("-") ? "-" : "";
-                    string body = textbox.Text.TrimStart('-').TrimStart('0');
-                    textbox.Text = sign + body;
-                }
+                textbox.Text = "0";
             }
         }
 
